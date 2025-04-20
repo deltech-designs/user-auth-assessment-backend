@@ -12,6 +12,8 @@ const PORT = process.env.PORT || 3000;
 // Configure CORS to allow specific origins
 const prodOrigin = [
   'https://user-auth-assessment-new-frontend.vercel.app/',
+  'https://user-auth-assessment-frontend.vercel.app',
+  process.env.FRONTEND_URL,
   process.env.FRONTEND_URL_2,
 ].filter(Boolean);
 
