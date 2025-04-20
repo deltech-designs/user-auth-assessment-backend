@@ -38,7 +38,7 @@ export const registerUser = async (req, res) => {
         .json({ message: 'Failed to generate verification token' });
     }
 
-    const verificationUrl = `${process.env.APP_URL}/verify-email/${
+    const verificationUrl = `${process.env.FRONTEND_URL}/verify-email/${
       tokenResult.data
     }?email=${encodeURIComponent(emailLower)}`;
 
