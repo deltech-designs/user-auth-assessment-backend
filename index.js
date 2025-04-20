@@ -11,23 +11,44 @@ const PORT = process.env.PORT || 3000;
 
 // Configure CORS to allow specific origins
 const prodOrigin = [
-  'https://user-auth-assessment-new-frontend.vercel.app/',
-  'https://user-auth-assessment-frontend.vercel.app',
   process.env.FRONTEND_URL,
   process.env.FRONTEND_URL_2,
-].filter(Boolean);
+  'http://localhost:3000', // Add local development origin
+]
+  .filter(Boolean)
+  .map((url) => url.replace(/\/$/, '')); // Normalize by removing trailing slashes
+
+// Validate environment variables
+if (!prodOrigin.length) {
+  console.error(
+    'Error: No valid FRONTEND_URL or FRONTEND_URL_2 provided in environment variables.'
+  );
+  process.exit(1);
+}
+
+console.log('Allowed origins:', prodOrigin); // Debug logging
 
 const corsOptions = {
   origin: (origin, callback) => {
-    // Add trailing slash-insensitive comparison
-    const normalizedOrigins = prodOrigin.map((url) => url.replace(/\/$/, ''));
-    const normalizedOrigin = origin ? origin.replace(/\/$/, '') : null;
+    // Log the incoming origin for debugging
+    console.log('Request Origin:', origin);
 
-    if (normalizedOrigins.includes(normalizedOrigin)) {
+    // Allow requests without an origin (e.g., Postman, cURL)
+    if (!origin) {
+      return callback(null, true);
+    }
+
+    // Normalize the incoming origin
+    const normalizedOrigin = origin.replace(/\/$/, '');
+
+    // Allow Vercel preview URLs (optional, adjust based on security needs)
+    const isVercelPreview = origin.includes('.vercel.app');
+
+    if (prodOrigin.includes(normalizedOrigin) || isVercelPreview) {
       callback(null, true);
     } else {
-      console.log('Rejected origin:', origin); // Debug log
-      console.log('Allowed origins:', prodOrigin); // Debug log
+      console.log('Rejected origin:', origin);
+      console.log('Allowed origins:', prodOrigin);
       callback(new Error('Not allowed by CORS'));
     }
   },
@@ -37,30 +58,25 @@ const corsOptions = {
   optionsSuccessStatus: 204,
 };
 
-app.use(cors(corsOptions)); // Enable CORS with the specified options
+// Apply CORS middleware
+app.use(cors(corsOptions));
 
-// Handle preflight requests explicitly
-app.options('*', cors(corsOptions));
-
-console.log(`CORS options: ${JSON.stringify(prodOrigin)}`); // Debug logging
-
+// Middleware to parse JSON and URL-encoded bodies
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // Routes
 app.use('/api/v1', router);
-app.use((req, res, next) => {
-  const origin = req.headers.origin;
-  if (prodOrigin.includes(origin)) {
-    res.header('Access-Control-Allow-Origin', origin);
-    res.header('Access-Control-Allow-Credentials', 'true');
-  }
-  next();
-});
+
 // Database connection
-connectDB().then(() => {
-  // Start server
-  app.listen(PORT, () => {
-    console.log(`Server is running at http://localhost:${PORT}`);
+connectDB()
+  .then(() => {
+    // Start server
+    app.listen(PORT, () => {
+      console.log(`Server is running at http://localhost:${PORT}`);
+    });
+  })
+  .catch((error) => {
+    console.error('Failed to connect to database:', error);
+    process.exit(1);
   });
-});
