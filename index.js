@@ -19,18 +19,10 @@ const prodOrigin = [
 const devOrigin = ['http://localhost:5173'];
 const corsOptions = {
   origin: (origin, callback) => {
-    if (process.env.NODE_ENV === 'production') {
-      if (prodOrigin.includes(origin)) {
-        callback(null, true);
-      } else {
-        callback(new Error('Not allowed by CORS'));
-      }
+    if (allowedOrigins.includes(origin) || !origin) {
+      callback(null, true); // Allow the request
     } else {
-      if (devOrigin.includes(origin) || !origin) {
-        callback(null, true);
-      } else {
-        callback(new Error('Not allowed by CORS'));
-      }
+      callback(new Error('Not allowed by CORS'));
     }
   },
   credentials: true,
