@@ -12,7 +12,7 @@ const PORT = process.env.PORT || 3000;
 // Configure CORS to allow specific origins
 const prodOrigin = [
   process.env.FRONTEND_URL,
-  process.env.FRONTEND_URL_3,
+  process.env.FRONTEND_URL_2,
 ].filter(Boolean);
 // Add localhost origins for development
 // Note: In production, you should not allow localhost origins for security reasons
