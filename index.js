@@ -19,7 +19,7 @@ const prodOrigin = [
 const devOrigin = ['http://localhost:5173'];
 const corsOptions = {
   origin: (origin, callback) => {
-    if (allowedOrigins.includes(origin) || !origin) {
+    if (prodOrigin.includes(origin) || !origin) {
       callback(null, true); // Allow the request
     } else {
       callback(new Error('Not allowed by CORS'));
