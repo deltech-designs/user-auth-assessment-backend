@@ -14,20 +14,22 @@ const prodOrigin = [
   process.env.FRONTEND_URL,
   process.env.FRONTEND_URL_2,
 ].filter(Boolean);
-// Add localhost origins for development
-// Note: In production, you should not allow localhost origins for security reasons
+
 const devOrigin = ['http://localhost:5173'];
+
 const corsOptions = {
   origin: (origin, callback) => {
-    if (prodOrigin.includes(origin) || !origin) {
+    if (prodOrigin.includes(origin)) {
       callback(null, true); // Allow the request
     } else {
+      console.log(`CORS error: ${origin} is not allowed`);
       callback(new Error('Not allowed by CORS'));
     }
   },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
+  optionsSuccessStatus: 204, // For legacy browser support
 };
 
 app.use(cors(corsOptions)); // Enable CORS with the specified options
