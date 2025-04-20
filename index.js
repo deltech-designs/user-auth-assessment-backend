@@ -11,25 +11,28 @@ const PORT = process.env.PORT || 3000;
 
 // Configure CORS to allow specific origins
 const prodOrigin = [
-  process.env.FRONTEND_URL,
+  'https://user-auth-assessment-new-frontend.vercel.app/',
   process.env.FRONTEND_URL_2,
 ].filter(Boolean);
 
-const devOrigin = ['http://localhost:5173'];
-
 const corsOptions = {
   origin: (origin, callback) => {
-    if (prodOrigin.includes(origin)) {
-      callback(null, true); // Allow the request
+    // Add trailing slash-insensitive comparison
+    const normalizedOrigins = prodOrigin.map((url) => url.replace(/\/$/, ''));
+    const normalizedOrigin = origin ? origin.replace(/\/$/, '') : null;
+
+    if (normalizedOrigins.includes(normalizedOrigin)) {
+      callback(null, true);
     } else {
-      console.log(`CORS error: ${origin} is not allowed`);
+      console.log('Rejected origin:', origin); // Debug log
+      console.log('Allowed origins:', prodOrigin); // Debug log
       callback(new Error('Not allowed by CORS'));
     }
   },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
-  optionsSuccessStatus: 204, // For legacy browser support
+  optionsSuccessStatus: 204,
 };
 
 app.use(cors(corsOptions)); // Enable CORS with the specified options
@@ -37,14 +40,23 @@ app.use(cors(corsOptions)); // Enable CORS with the specified options
 // Handle preflight requests explicitly
 app.options('*', cors(corsOptions));
 
+console.log(`CORS options: ${JSON.stringify(prodOrigin)}`); // Debug logging
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// Routes
+app.use('/api/v1', router);
+app.use((req, res, next) => {
+  const origin = req.headers.origin;
+  if (prodOrigin.includes(origin)) {
+    res.header('Access-Control-Allow-Origin', origin);
+    res.header('Access-Control-Allow-Credentials', 'true');
+  }
+  next();
+});
 // Database connection
 connectDB().then(() => {
-  // Routes
-  app.use('/api/v1', router);
-
   // Start server
   app.listen(PORT, () => {
     console.log(`Server is running at http://localhost:${PORT}`);
